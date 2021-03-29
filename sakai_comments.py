@@ -13,7 +13,7 @@ class Comment:
         self.computing_id = computing_id
         self.last_name = last_name
         self.first_name = first_name
-        self.comment = comment.replace('\\n', '\n')
+        self.comment = comment.replace('\\n', '\n') if comment is not None else ''
 
     def write(self, root_path):
         with open(PATH_FORMAT.format(root_path, self.last_name, self.first_name, self.computing_id), 'w') as f:
