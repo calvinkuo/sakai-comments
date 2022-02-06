@@ -4,7 +4,7 @@
 from openpyxl import load_workbook
 from openpyxl.utils import get_column_letter as col
 
-PATH_FORMAT = '{}/{}, {}({})/comments.txt'
+PATH_FORMAT = '{}/{}({})/comments.txt'
 TSV_SEPARATOR = '\t'
 
 
@@ -13,10 +13,14 @@ class Comment:
         self.computing_id = computing_id
         self.last_name = last_name
         self.first_name = first_name
+        self.name = '{}, {}'.format(last_name, first_name) \
+            if last_name is not None and first_name is not None else '{},'.format(computing_id)
         self.comment = comment.replace('\\n', '\n') if comment is not None else ''
 
     def write(self, root_path):
-        with open(PATH_FORMAT.format(root_path, self.last_name, self.first_name, self.computing_id), 'w') as f:
+        with open(PATH_FORMAT.format(root_path, self.name, self.computing_id),
+                  'w',
+                  encoding='utf-8') as f:
             f.write(self.comment)
 
     def __repr__(self):
@@ -31,6 +35,14 @@ def parse_xls(path, comment_key):
     ws = wb.active
     print("Worksheet loaded")
 
+    comments_list = parse_ws(ws, comment_key)
+
+    wb.close()
+    print("All comments loaded")
+    return comments_list
+
+
+def parse_ws(ws, comment_key):
     # get indices of column headers
     column_index = {}
     for c in range(1, 20):
@@ -50,8 +62,6 @@ def parse_xls(path, comment_key):
             break
         comments_list.append(Comment(computing_id, last_name, first_name, comment))
 
-    wb.close()
-    print("All comments loaded")
     return comments_list
 
 
@@ -83,16 +93,18 @@ def write_comments(comments_list, path):
     print("All comments written")
 
 
-if __name__ == "__main__":
-    comments_path = input("File path for grades.xls? ").strip()
-    folder_path = input("Assignment path (the folder with each student's folder)? ").strip()
-    header_comment = input("Column header for comments? ").strip()
-
-    # strip any quotes from path
-    if comments_path[0] == '"' and comments_path[-1] == '"':
+def run(comments_path, folder_path, header_comment):
+    # strip any quotes from xls_path
+    if comments_path.startswith('"') and comments_path.endswith('"'):
         comments_path = comments_path[1:-1]
-    if folder_path[0] == '"' and folder_path[-1] == '"':
+    if folder_path.startswith('"') and folder_path.endswith('"'):
         folder_path = folder_path[1:-1]
 
-    comments = parse_xls(comments_path, header_comment)
-    write_comments(comments, folder_path)
+    write_comments(parse_xls(comments_path, header_comment), folder_path)
+
+
+if __name__ == "__main__":
+    comments = input("File xls_path for grades.xls? ").strip()
+    folder = input("Assignment xls_path (the folder with each student's folder)? ").strip()
+    header = input("Column header for comments? ").strip()
+    run(comments, folder, header)
